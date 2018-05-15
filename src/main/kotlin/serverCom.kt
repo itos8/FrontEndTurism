@@ -1,19 +1,16 @@
 package frontEnd
 
-import google.maps.LatLng
-import google.maps.MapOptions
+import addMarker
+import google.maps.*
+import kotlinx.html.InputType
 import kotlinx.html.dom.create
-import kotlinx.html.h1
-import kotlinx.html.h2
-import kotlinx.html.id
+import kotlinx.html.input
 import kotlinx.html.js.div
-import kotlinx.html.script
-import org.w3c.dom.HTMLElement
+import kotlinx.html.js.onClickFunction
 import org.w3c.xhr.XMLHttpRequest
 import kotlin.browser.document
-import google.maps.*
 
-fun login(mail: String?, pass : String?)
+fun login(mail: String?, pass : String?, map: Map)
 {
     val req = XMLHttpRequest()
 
@@ -27,15 +24,30 @@ fun login(mail: String?, pass : String?)
     {
         val array = JSON.parse<Array<PointOfInterest>>(req.responseText)
 
-        val map = document.getElementById("map")
-
         for (elem : PointOfInterest in array)
         {
-            addMarker(LatLng(elem.lat, elem.lon), elem.name, elem.description)
-
-            console.log(elem.name)
+            addMarker(LatLng(elem.lat, elem.lon), elem.name, elem.description, map)
         }
     }
+
+    var admin = document.getElementById("admin")
+
+    val console = document.create.div {
+        input {
+            value = "New place"
+            type = InputType.submit
+            onClickFunction = {
+                event.addListener(map, "click", {event: MouseEvent -> addLatLng(event, map)})
+            }
+        }
+    }
+
+    admin!!.appendChild(console)
 }
 
-external fun addMarker(loc : LatLng, name: String, desc: String): Nothing
+fun addLatLng(event: MouseEvent, map: Map)
+{
+   addMarker(event.latLng, "Nome", "ciao", map)
+}
+
+//external fun addMarker(loc : LatLng, name: String, desc: String): Nothing

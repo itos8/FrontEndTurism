@@ -31,6 +31,10 @@ h1 {
         height: 50%;
       }
 
+#admin {
+        height: 50%;
+      }
+
 html, body {
         height: 100%;
         margin: 0;
