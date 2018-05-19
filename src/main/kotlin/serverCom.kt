@@ -2,15 +2,15 @@ package frontEnd
 
 import addMarker
 import google.maps.*
-import kotlinx.html.InputType
+import kotlinx.html.*
 import kotlinx.html.dom.create
-import kotlinx.html.input
 import kotlinx.html.js.div
 import kotlinx.html.js.onClickFunction
+import org.w3c.dom.HTMLInputElement
 import org.w3c.xhr.XMLHttpRequest
 import kotlin.browser.document
 
-fun login(mail: String?, pass : String?, map: Map)
+fun login(mail: String, pass : String, map: Map)
 {
     val req = XMLHttpRequest()
 
@@ -37,7 +37,9 @@ fun login(mail: String?, pass : String?, map: Map)
             value = "New place"
             type = InputType.submit
             onClickFunction = {
-                event.addListener(map, "click", {event: MouseEvent -> addLatLng(event, map)})
+                admin!!.firstElementChild!!.remove()
+                admin!!.appendChild(document.create.div { h2 { +"Click on map to choise the point"} })
+                event.addListener(map, "click", {event: MouseEvent -> addNewPlace(event, map, mail, pass) })
             }
         }
     }
@@ -45,9 +47,73 @@ fun login(mail: String?, pass : String?, map: Map)
     admin!!.appendChild(console)
 }
 
-fun addLatLng(event: MouseEvent, map: Map)
+fun addNewPlace(event: MouseEvent, map: Map, mail: String, pass: String)
 {
-   addMarker(event.latLng, "Nome", "ciao", map)
-}
+    var admin = document.getElementById("admin")
+    admin!!.firstElementChild!!.remove()
+    var pos : LatLng = event.latLng
 
-//external fun addMarker(loc : LatLng, name: String, desc: String): Nothing
+    val addPlace = document.create.div {
+        id = "addPlace"
+        h2 {
+            +pos.toString()
+        }
+        input {
+            id = "name"
+            type = InputType.text
+        }
+        br
+        input {
+            id = "description"
+            type = InputType.text
+        }
+        br
+        input {
+            id = "Add Place"
+            type = InputType.submit
+            onClickFunction = {
+                if (document.getElementById("name")!=null && document.getElementById("description")!=null)
+                {
+                    val name = document.getElementById("name") as HTMLInputElement
+                    val description = document.getElementById("description") as HTMLInputElement
+                    val req = XMLHttpRequest()
+                    req.open("POST", "http://localhost:8080/rest/management/newPlace?mail=$mail&pass=$pass", false)
+                    req.setRequestHeader("Content-Type", "application/json")
+                    req.send(JSON.stringify(PointOfInterest(event.latLng.lat().toDouble(),
+                                             event.latLng.lng().toDouble(),
+                                             name.value,
+                                             description.value,
+                                             "download.jpg")))
+
+                    while(req.readyState != XMLHttpRequest.DONE){}
+
+                    if ( req.status == 201.toShort())
+                    {
+                        val poi = JSON.parse<PointOfInterest>(req.responseText)
+
+                        addMarker(LatLng(poi.lat, poi.lon), poi.name, poi.description, map)
+                    }
+
+                    admin!!.firstElementChild!!.remove()
+                    google.maps.event.clearListeners(map, "click")
+
+                    val console = document.create.div {
+                        input {
+                            value = "New place"
+                            type = InputType.submit
+                            onClickFunction = {
+                                admin!!.firstElementChild!!.remove()
+                                admin!!.appendChild(document.create.textArea { "Click on map to choise the point" })
+                                google.maps.event.addListener(map, "click", { event: MouseEvent -> addNewPlace(event, map, mail, pass) })
+                            }
+                        }
+                    }
+
+                    admin!!.appendChild(console)
+                }
+            }
+        }
+    }
+
+    admin!!.appendChild(addPlace)
+}
