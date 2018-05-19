@@ -1,11 +1,14 @@
+import frontEnd.Position
 import kotlinx.html.*
 import frontEnd.login
 import google.maps.LatLng
 import google.maps.Map
+import google.maps.PolygonOptions
 import kotlinx.html.dom.create
 import kotlin.browser.document
 import kotlinx.html.js.onClickFunction
 import org.w3c.dom.HTMLInputElement
+import kotlin.js.Console
 
 fun main(args: Array<String>)
 {
@@ -16,7 +19,7 @@ fun main(args: Array<String>)
 
         val map = google.maps.Map(document.getElementById("map"))
         map.setCenter(latlng = LatLng(45, 7))
-        map.setZoom(8)
+        map.setZoom(2)
 
         h1{
             +"HOME"
@@ -68,4 +71,22 @@ fun addMarker(latLng: LatLng, name: String, description: String, map: Map)
     marker.setMap(map)
 
     marker.addListener("click", { infoWindow.open(map, marker) })
+}
+
+fun addPolygon(polygon: Array<Position>, map: Map)
+{
+    var path = mutableListOf<LatLng>()
+
+    for (elem : Position in polygon)
+        path.add(LatLng(elem.lat, elem.lon))
+
+    var polygon = google.maps.Polygon()
+    polygon.setDraggable(false)
+    polygon.setEditable(false)
+    polygon.setPath(path.toTypedArray())
+    polygon.set("strokeWeight", 1)
+    polygon.set("strokeColor", "#0000FF")
+    polygon.set("fillColor", "#0000FF")
+    polygon.set("fillOpacity", 0.35)
+    polygon.setMap(map)
 }

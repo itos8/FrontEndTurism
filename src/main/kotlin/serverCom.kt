@@ -1,6 +1,7 @@
 package frontEnd
 
 import addMarker
+import addPolygon
 import google.maps.*
 import kotlinx.html.*
 import kotlinx.html.dom.create
@@ -22,11 +23,16 @@ fun login(mail: String, pass : String, map: Map)
 
     if ( req.status == 200.toShort())
     {
-        val array = JSON.parse<Array<PointOfInterest>>(req.responseText)
+        val array = JSON.parse<Array<Point>>(req.responseText)
 
-        for (elem : PointOfInterest in array)
+        map.setCenter(LatLng(array[0].position.lat, array[0].position.lon))
+        map.setZoom(10)
+
+        for (elem : Point in array)
         {
-            addMarker(LatLng(elem.lat, elem.lon), elem.name, elem.description, map)
+            addMarker(LatLng(elem.position.lat, elem.position.lon), elem.name, elem.description, map)
+
+            addPolygon(elem.polygon, map)
         }
     }
 
@@ -79,8 +85,7 @@ fun addNewPlace(event: MouseEvent, map: Map, mail: String, pass: String)
                     val req = XMLHttpRequest()
                     req.open("POST", "http://localhost:8080/rest/management/newPlace?mail=$mail&pass=$pass", false)
                     req.setRequestHeader("Content-Type", "application/json")
-                    req.send(JSON.stringify(PointOfInterest(event.latLng.lat().toDouble(),
-                                             event.latLng.lng().toDouble(),
+                    req.send(JSON.stringify(PointOfInterest(event.latLng.lat().toDouble(), event.latLng.lng().toDouble(),
                                              name.value,
                                              description.value,
                                              "download.jpg")))
@@ -89,9 +94,11 @@ fun addNewPlace(event: MouseEvent, map: Map, mail: String, pass: String)
 
                     if ( req.status == 201.toShort())
                     {
-                        val poi = JSON.parse<PointOfInterest>(req.responseText)
+                        val poi = JSON.parse<Point>(req.responseText)
 
-                        addMarker(LatLng(poi.lat, poi.lon), poi.name, poi.description, map)
+                        addMarker(LatLng(poi.position.lat, poi.position.lon), poi.name, poi.description, map)
+
+                        addPolygon(poi.polygon, map)
                     }
 
                     admin!!.firstElementChild!!.remove()
