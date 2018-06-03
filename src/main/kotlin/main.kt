@@ -3,12 +3,12 @@ import kotlinx.html.*
 import frontEnd.login
 import google.maps.LatLng
 import google.maps.Map
-import google.maps.PolygonOptions
+import google.maps.Marker
+import google.maps.Polygon
 import kotlinx.html.dom.create
 import kotlin.browser.document
 import kotlinx.html.js.onClickFunction
 import org.w3c.dom.HTMLInputElement
-import kotlin.js.Console
 
 fun main(args: Array<String>)
 {
@@ -33,7 +33,7 @@ fun main(args: Array<String>)
         br
         input {
             id = "pass"
-            type = InputType.text
+            type = InputType.password
         }
         br
         input{
@@ -41,9 +41,7 @@ fun main(args: Array<String>)
             type = InputType.submit
             onClickFunction = { val mail = document.getElementById("mail") as HTMLInputElement
                 val pass = document.getElementById("pass") as HTMLInputElement
-                val login = login(mail.value,
-                                        pass.value,
-                                        map)
+                login(mail.value, pass.value, map)
 
                 root!!.firstElementChild!!.remove()
             }
@@ -53,7 +51,7 @@ fun main(args: Array<String>)
     root!!.appendChild(home)
 }
 
-fun addMarker(latLng: LatLng, name: String, description: String, map: Map)
+fun addMarker(latLng: LatLng, name: String, description: String, map: Map) : Marker
 {
     var contentString =
             "<div id=\"content\">"+
@@ -71,9 +69,11 @@ fun addMarker(latLng: LatLng, name: String, description: String, map: Map)
     marker.setMap(map)
 
     marker.addListener("click", { infoWindow.open(map, marker) })
+
+    return marker
 }
 
-fun addPolygon(polygon: Array<Position>, map: Map)
+fun addPolygon(polygon: Array<Position>, map: Map, editable: Boolean) : Polygon
 {
     var path = mutableListOf<LatLng>()
 
@@ -82,11 +82,14 @@ fun addPolygon(polygon: Array<Position>, map: Map)
 
     var polygon = google.maps.Polygon()
     polygon.setDraggable(false)
-    polygon.setEditable(false)
+    polygon.setEditable(editable)
+    polygon.set("clickable", false)
     polygon.setPath(path.toTypedArray())
     polygon.set("strokeWeight", 1)
     polygon.set("strokeColor", "#0000FF")
     polygon.set("fillColor", "#0000FF")
     polygon.set("fillOpacity", 0.35)
     polygon.setMap(map)
+
+    return polygon
 }
