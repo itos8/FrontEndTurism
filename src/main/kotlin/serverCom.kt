@@ -124,7 +124,7 @@ fun addNewPlace(event: MouseEvent, map: Map, mail: String, pass: String)
                     val name = document.getElementById("name") as HTMLInputElement
                     val description = document.getElementById("description") as HTMLInputElement
                     val nameImage = document.getElementById("image") as HTMLInputElement
-                    val req = XMLHttpRequest()
+                    val req2 = XMLHttpRequest()
 
                     val listPoint = arrayOf<Position>()
                     var i = 0
@@ -138,34 +138,39 @@ fun addNewPlace(event: MouseEvent, map: Map, mail: String, pass: String)
                     }
 
                     polygon.setMap(null)
-                    req.open("POST", "http://localhost:8080/rest/management/newPlace?mail=$mail&pass=$pass", false)
-                    req.setRequestHeader("Content-Type", "application/json")
-                    req.send(JSON.stringify(Point(Position(pos.lat().toDouble(), pos.lng().toDouble()),
-                                             name.value,
-                                             description.value,
-                                             listPoint,
-                                             nameImage.value)))
 
-                    while(req.readyState != XMLHttpRequest.DONE){}
+                    req2.open("POST", "http://localhost:8080/rest/management/newImage?mail=$mail&pass=$pass", false)
+                    req2.setRequestHeader("Content-Type", "image/jpeg")
 
-                    if ( req.status == 201.toShort())
+                    req2.send(nameImage.files!![0])
+
+                    while(req2.readyState != XMLHttpRequest.DONE){}
+
+                    if ( req2.status == 201.toShort())
                     {
-                        /*var req2 = XMLHttpRequest()
-                        req2.open("POST", "http://localhost:8080/rest/management/newImage?mail=$mail&pass=$pass&nameImage=${nameImage.value}", false)
-                        req2.setRequestHeader("Content-Type", "image/jpeg")
+                        var req = XMLHttpRequest()
 
-                        req2.send(nameImage.files!![0])
 
-                        while(req2.readyState != XMLHttpRequest.DONE){}
+                        req.open("POST", "http://localhost:8080/rest/management/newPlace?mail=$mail&pass=$pass", false)
+                        req.setRequestHeader("Content-Type", "application/json")
+                        req.send(JSON.stringify(Point(Position(pos.lat().toDouble(), pos.lng().toDouble()),
+                                name.value,
+                                description.value,
+                                listPoint,
+                                req2.responseText)))
 
-                        if ( req2.status == 201.toShort())
-                        {*/
+
+
+                        while(req.readyState != XMLHttpRequest.DONE){}
+
+                        if ( req.status == 201.toShort())
+                        {
                             val poi = JSON.parse<Point>(req.responseText)
 
                             addMarker(LatLng(poi.position.lat, poi.position.lon), poi.name, poi.description, map)
 
                             addPolygon(poi.polygon, map, false)
-                        //}
+                        }
 
                     }
 
